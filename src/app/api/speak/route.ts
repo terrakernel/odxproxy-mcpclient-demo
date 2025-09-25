@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { audioBase64ToText } from "@/lib/gemini";
 import { getMcpClient } from "@/lib/mcpStdioClient";
 import { log } from "@/lib/logger";
 import { PRESETS, PresetKey } from "@/lib/presets";
@@ -15,48 +14,38 @@ export async function POST(req: NextRequest) {
     log("API /api/speak.begin", { reqId });
 
     const body = (await req.json()) as {
-      audioBase64?: string;
-      mimeType?: string;
-      presetKey?: PresetKey; // <-- new
+      text?: string;
+      presetKey?: PresetKey;
     };
 
-    const {
-      audioBase64,
-      mimeType = "audio/webm",
-      presetKey = "partners_by_name",
-    } = body;
+    const { text = "", presetKey = "partners_by_name" } = body;
 
-    if (!audioBase64) {
+    if (!text.trim()) {
       log("API /api/speak.badRequest", { reqId });
-      return NextResponse.json({ error: "Missing audioBase64" }, { status: 400 });
+      return NextResponse.json({ error: "Missing text" }, { status: 400 });
     }
 
-    // 1) STT
-    log("API /api/speak.stt.begin", { reqId, mimeType, size: audioBase64.length });
-    const text = await audioBase64ToText(audioBase64, mimeType);
-    log("API /api/speak.stt.ok", { reqId, textPreview: text.slice(0, 120) });
-
-    // 2) Resolve preset + build args from STT text
+    // Resolve preset + build args from typed text
     const preset = PRESETS.find((p) => p.key === presetKey) ?? PRESETS[0];
     const toolName = preset.tool;
     const args = preset.buildArgs(text);
 
     // Guard rails for inputs required by specific presets
     if (preset.key === "partners_by_id" && typeof args["id"] !== "number") {
-      return NextResponse.json({ error: "Please say a numeric ID for partner." }, { status: 400 });
+      return NextResponse.json({ error: "Please provide a numeric partner ID." }, { status: 400 });
     }
     if (preset.key === "companies_by_id" && typeof args["id"] !== "number") {
-      return NextResponse.json({ error: "Please say a numeric ID for company." }, { status: 400 });
+      return NextResponse.json({ error: "Please provide a numeric company ID." }, { status: 400 });
     }
     if (preset.key === "partners_by_email" && !String(args["email"] || "").includes("@")) {
-      return NextResponse.json({ error: "Please say a valid email address." }, { status: 400 });
+      return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
     }
     if (preset.key === "create_partner_name_only" && !String(args["name"] || "").trim()) {
-      return NextResponse.json({ error: "Please say the partner name." }, { status: 400 });
+      return NextResponse.json({ error: "Please provide the partner name." }, { status: 400 });
     }
 
-    // 3) MCP call
-    log("API /api/speak.mcp.connect");
+    // MCP call
+    log("API /api/speak.mcp.connect", { reqId });
     const c = await getMcpClient();
 
     log("API /api/speak.mcp.call.begin", { reqId, toolName, args });
@@ -65,7 +54,6 @@ export async function POST(req: NextRequest) {
       arguments: args,
     })) as McpToolResult;
 
-    // Extract text safely
     const raw = res?.content?.find((x) => x.type === "text" && "text" in x);
     const mcpText: string = typeof raw?.text === "string" ? raw.text : "No text";
 

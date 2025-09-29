@@ -1,15 +1,13 @@
 # ODXPROXY MCP Client Demo
 
-## Python
+## Nodejs
 ### Requirements
-- Python 3.10 or higher 
-- ANTROPHIC / Google Gemini or aistudio API Key
+- Nodejs 18 or higher
+- ANTROPHIC API Key
 
 ### Installation
 Navigate to the `client/python` directory
 ```shell
-python3 -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -29,5 +27,5 @@ adk web
 
 2. Using antrhopic SDK
 ```shell
-python3 claude.py /path/to/your/server/build/index.js
+python3 claude.py
 ```

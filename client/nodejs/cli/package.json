@@ -1,0 +1,23 @@
+{
+  "name": "cli",
+  "version": "0.1.0",
+  "description": "Nodejs cli ODXProxy MCP Client Demo",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\""
+  },
+  "type": "module",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.64.0",
+    "@modelcontextprotocol/sdk": "^1.18.2",
+    "dotenv": "^17.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "typescript": "^5.9.2"
+  }
+}

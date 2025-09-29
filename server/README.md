@@ -21,3 +21,8 @@ yarn install
 
 ### 2. Edit environment variables
 Copy `.env.TEMPLATE` to `.env` and edit the environment variables.
+
+### 3. Build
+```shell
+npm run build
+```
